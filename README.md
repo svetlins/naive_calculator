@@ -1,6 +1,6 @@
 # A Naive Ruby Calculator
 
-[[https://github.com/svetlins/naive_calculator/blob/master/doc/demo.gif|alt=demo]]
+![demo](https://github.com/svetlins/naive_calculator/blob/master/doc/demo.gif)
 
 # Installation
 
