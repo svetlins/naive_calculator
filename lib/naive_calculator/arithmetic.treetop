@@ -1,0 +1,218 @@
+grammar Arithmetic
+  rule body
+    command / fundef / assign / expression
+  end
+
+  rule expression
+    additive
+  end
+
+  rule additive
+    (head:multitive
+     tail:(
+       space operator:additive_op
+       space operand:multitive)*
+    ) {
+      def eval(env)
+        tail.elements.inject(head.eval(env)) do |value, element|
+          element.operator.apply(value, element.operand.eval(env))
+        end
+      end
+    }
+  end
+
+  rule additive_op
+    '+' {
+      def apply(a, b)
+        a + b
+      end
+    }
+    /
+    '-' {
+      def apply(a, b)
+        a - b
+      end
+    }
+  end
+
+  rule multitive
+    (head:exponential
+     tail:(
+      space operator:multitive_op
+      space operand:exponential)*
+    ) {
+      def eval(env)
+        tail.elements.inject(head.eval(env)) do |value, element|
+          element.operator.apply(value, element.operand.eval(env))
+        end
+      end
+    }
+  end
+
+  rule multitive_op
+    '*' {
+      def apply(a, b)
+        a * b
+      end
+    }
+    /
+    '/' {
+      def apply(a, b)
+        a / b
+      end
+    }
+  end
+
+  rule exponential
+    (head:primary
+     tail:(
+      space operator:exp_op
+      space operand:primary)*
+    ) {
+      def eval(env)
+        tail.elements.inject(head.eval(env)) do |value, element|
+          element.operator.apply(value, element.operand.eval(env))
+        end
+      end
+    }
+  end
+
+  rule exp_op
+    '^' {
+      def apply(a, b)
+        a**b
+      end
+    }
+  end
+
+  rule primary
+    (minus:'-'? primary_without_sign) {
+      def eval(env)
+        primary_without_sign.eval(env) * (minus.present? ? -1 : 1)
+      end
+    }
+  end
+
+  rule primary_without_sign
+    funcall /
+    variable /
+    number /
+    '(' space expression space ')' {
+      def eval(env)
+        expression.eval(env)
+      end
+    }
+  end
+
+  rule assign
+    (variable space '=' space expression) {
+      def eval(env)
+        env.define_variable variable.text_value.to_sym, expression.eval(env)
+      end
+    }
+  end
+
+  rule variable
+    [a-z]+ {
+      def eval(env)
+        env.lookup_variable text_value.to_sym
+      end
+    }
+  end
+
+  rule fundef
+    (fun:[a-z]+ '(' arglist:(arg:[a-z]+ (space ',' space arg:[a-z]+)*) ')' space '=' space expression) {
+      def eval(env)
+        args = [arglist.arg.text_value] + arglist.elements.last.elements.map { |e| e.arg.text_value }
+
+        env.define_function(
+          fun.text_value.to_sym,
+          args.size,
+          lambda do |*a|
+            ne = env.clone
+
+            args.each_with_index do |arg, index|
+              ne.define_variable(arg.to_sym, a[index])
+            end
+
+            expression.eval(ne)
+          end
+        )
+      end
+    }
+  end
+
+  rule funcall
+    (fun:variable '(' arglist:(expression (space ',' space expression)*) ')') {
+      def eval(env)
+        args = [arglist.expression.eval(env)] + arglist.elements.last.elements.map { |e| e.expression.eval(env) }
+
+        f = env.lookup_function(fun.text_value.to_sym, args.size)
+
+        f.call(*args)
+      end
+    }
+  end
+
+  rule unary_minus
+    ('-' expression) {
+      def eval(env)
+        -expression.eval(env)
+      end
+    }
+  end
+
+  rule number
+    float / integer
+  end
+
+  rule float
+    (digits '.' digits) {
+      def eval(env)
+        BigDecimal.new(text_value)
+      end
+    }
+  end
+
+  rule integer
+    ([1-9] [0-9]* / '0') {
+      def eval(env)
+        BigDecimal.new(text_value.to_i)
+      end
+    }
+  end
+
+  rule digits
+    [0-9]+
+  end
+
+  rule space
+    ' '*
+  end
+
+  # rule sign
+  #   '-'?
+  # end
+
+  rule command
+    plot
+  end
+
+  rule plot
+    ('plot' space expression space ',' space variable space 'from' space min:expression space 'to' space max:expression) {
+      def eval(env)
+        callable = lambda do |var|
+          ne = env.clone
+          ne.define_variable(variable.text_value.to_sym, var)
+          expression.eval(ne)
+        end
+
+      NaiveCalculator::Plot.new(
+          callable,
+          min.eval(env),
+          max.eval(env)
+        )
+      end
+    }
+  end
+end
