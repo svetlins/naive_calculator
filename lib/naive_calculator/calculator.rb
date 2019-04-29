@@ -1,4 +1,4 @@
-Treetop.load 'lib/naive_calculator/arithmetic'
+Treetop.load File.expand_path('../arithmetic', __FILE__)
 
 module NaiveCalculator
   class Calculator

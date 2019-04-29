@@ -44,7 +44,7 @@ module NaiveCalculator
     end
 
     def plot(plot_data)
-      x_range = 90
+      x_range = 80
       y_range = 10
 
       result = (y_range + 1).times.map {  ' ' * (x_range + 1) }

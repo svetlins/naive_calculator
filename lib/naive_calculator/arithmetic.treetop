@@ -14,9 +14,13 @@ grammar Arithmetic
        space operand:multitive)*
     ) {
       def eval(env)
-        tail.elements.inject(head.eval(env)) do |value, element|
-          element.operator.apply(value, element.operand.eval(env))
+        result = head.eval(env)
+
+        tail.elements.each do |element|
+          result = element.operator.apply(result, element.operand.eval(env))
         end
+
+        result
       end
     }
   end
@@ -36,15 +40,19 @@ grammar Arithmetic
   end
 
   rule multitive
-    (head:exponential
+    (head:exponentiation
      tail:(
       space operator:multitive_op
-      space operand:exponential)*
+      space operand:exponentiation)*
     ) {
       def eval(env)
-        tail.elements.inject(head.eval(env)) do |value, element|
-          element.operator.apply(value, element.operand.eval(env))
+        result = head.eval(env)
+
+        tail.elements.each do |element|
+          result = element.operator.apply(result, element.operand.eval(env))
         end
+
+        result
       end
     }
   end
@@ -63,24 +71,20 @@ grammar Arithmetic
     }
   end
 
-  rule exponential
+  rule exponentiation
     (head:primary
      tail:(
-      space operator:exp_op
+      space '^'
       space operand:primary)*
     ) {
       def eval(env)
-        tail.elements.inject(head.eval(env)) do |value, element|
-          element.operator.apply(value, element.operand.eval(env))
-        end
-      end
-    }
-  end
+        result = head.eval(env)
 
-  rule exp_op
-    '^' {
-      def apply(a, b)
-        a**b
+        tail.elements.each do |element|
+          result = result**element.operand.eval(env)
+        end
+
+        result
       end
     }
   end
@@ -169,7 +173,7 @@ grammar Arithmetic
   rule float
     (digits '.' digits) {
       def eval(env)
-        BigDecimal.new(text_value)
+        BigDecimal(text_value)
       end
     }
   end
@@ -177,7 +181,7 @@ grammar Arithmetic
   rule integer
     ([1-9] [0-9]* / '0') {
       def eval(env)
-        BigDecimal.new(text_value.to_i)
+        BigDecimal(text_value.to_i)
       end
     }
   end

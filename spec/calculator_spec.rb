@@ -22,10 +22,26 @@ module NaiveCalculator
       ).to eq(42)
     end
 
+    it 'evaluates sums of more than 2 values' do
+      expect(
+        calculator.evaluate('1 + 1 + 1')
+      ).to eq(3)
+    end
+
+    it 'evaluates products of more than 2 values' do
+      expect(
+        calculator.evaluate('2 * 2 * 2')
+      ).to eq(8)
+    end
+
     it 'evaluates exponents' do
       expect(
         calculator.evaluate('2^10')
       ).to eq(1024)
+
+      expect(
+        calculator.evaluate('2^2^2')
+      ).to eq(16)
     end
 
     it 'evaluates signs' do
@@ -38,26 +54,36 @@ module NaiveCalculator
       ).to eq(6)
     end
 
-    it 'respects precedence' do
-      expect(
-        calculator.evaluate('1 + 2 * 3')
-      ).to eq(7)
+    describe 'precedence' do
+      specify 'multiplication is before addition' do
+        expect(
+          calculator.evaluate('1 + 2 * 3')
+        ).to eq(7)
+      end
 
-      expect(
-        calculator.evaluate('2*2^10')
-      ).to eq(2048)
+      specify 'exponentiation is before multiplication' do
+        expect(
+          calculator.evaluate('2*2^10')
+        ).to eq(2048)
+      end
+
+      specify 'unary minus is before exponentiation' do
+        expect(
+          calculator.evaluate('-2^2')
+        ).to eq(4)
+      end
+
+      specify 'parens override precedence' do
+        expect(
+          calculator.evaluate('-(2^2)')
+        ).to eq(-4)
+      end
     end
 
     it 'respects parens' do
       expect(
         calculator.evaluate('(1 + 2) * 3')
       ).to eq(9)
-    end
-
-    it 'evaluates complex function calls' do
-      expect(
-        calculator.evaluate('cos(-pi/(1+1))')
-      ).to be_within(0.001).of(0)
     end
 
     it 'supports variables' do
@@ -88,6 +114,10 @@ module NaiveCalculator
       expect(
         calculator.evaluate('pow(1+1, 2*(2+3))')
       ).to eq(1024)
+
+      expect(
+        calculator.evaluate('cos(-pi/(1+1))')
+      ).to be_within(0.001).of(0)
     end
 
     it 'signals invalid input' do
@@ -99,13 +129,17 @@ module NaiveCalculator
     it 'handles decimal numbers without losing precision' do
       expect(
         calculator.evaluate('0.1 + 0.000000000000000000000001')
-      ).to eq(BigDecimal.new('0.100000000000000000000001'))
+      ).to eq(BigDecimal('0.100000000000000000000001'))
     end
 
     it 'can plot expressions' do
-      expect(
-        calculator.evaluate('plot x*x, x from -2 to 2')
-      ).to be_present
+      plot = calculator.evaluate('plot x*x, x from -2 to 2')
+
+      expect(plot).to be_present
+
+      expect(plot.function.call(2)).to eq(4)
+      expect(plot.min_x).to eq(-2)
+      expect(plot.max_x).to eq(2)
     end
   end
 end

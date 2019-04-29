@@ -5,19 +5,19 @@ module NaiveCalculator
     describe 'can pretty print output' do
       specify do
         expect(
-          Repl.pretty(BigDecimal.new('1.0'))
+          Repl.pretty(BigDecimal('1.0'))
         ).to eq('=> 1')
       end
 
       specify do
         expect(
-          Repl.pretty(BigDecimal.new('1.000001'))
+          Repl.pretty(BigDecimal('1.000001'))
         ).to eq('=> 1.000001')
       end
 
       specify do
         expect(
-          Repl.pretty(BigDecimal.new('-1'))
+          Repl.pretty(BigDecimal('-1'))
         ).to eq('=> -1')
       end
 

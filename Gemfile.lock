@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    naive_calculator (0.1.0)
+    naive_calculator (0.1.2)
       activesupport
       pry
       treetop
