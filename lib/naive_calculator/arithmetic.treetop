@@ -132,7 +132,7 @@ grammar Arithmetic
         env.define_function(
           fun.text_value.to_sym,
           args.size,
-          lambda do |*a|
+          ->(*a) {
             ne = env.clone
 
             args.each_with_index do |arg, index|
@@ -140,7 +140,7 @@ grammar Arithmetic
             end
 
             expression.eval(ne)
-          end
+          }
         )
       end
     }
@@ -205,11 +205,11 @@ grammar Arithmetic
   rule plot
     ('plot' space expression space ',' space variable space 'from' space min:expression space 'to' space max:expression) {
       def eval(env)
-        callable = lambda do |var|
+        callable = ->(var) {
           ne = env.clone
           ne.define_variable(variable.text_value.to_sym, var)
           expression.eval(ne)
-        end
+        }
 
       NaiveCalculator::Plot.new(
           callable,

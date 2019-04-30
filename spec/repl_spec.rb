@@ -30,7 +30,7 @@ module NaiveCalculator
 
     it 'can plot' do
       expect(
-        Repl.pretty(Plot.new(lambda { |x| x }, -1, 1))
+        Repl.pretty(Plot.new(->(x) { x }, -1, 1))
       ).to be_present
     end
   end

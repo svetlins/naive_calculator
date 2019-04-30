@@ -16,7 +16,7 @@ module NaiveCalculator
     end
 
     it 'can hold a function definition' do
-      env.define_function(:bar, 1, lambda {})
+      env.define_function(:bar, 1, -> {})
       expect(env.lookup_function(:bar, 1)).to be_present
     end
 
@@ -27,7 +27,7 @@ module NaiveCalculator
     end
 
     it 'checks arity of held function' do
-      env.define_function(:bar, 1, lambda {})
+      env.define_function(:bar, 1, -> {})
       expect do
         env.lookup_function(:bar, 2)
       end.to raise_error('Function `bar` takes 1 argument(s) (2 given)')
